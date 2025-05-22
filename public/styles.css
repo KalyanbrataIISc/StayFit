@@ -277,10 +277,20 @@ input:checked + .slider:before {
 .app-title {
     text-align: center;
     color: var(--primary-color);
-    margin: 10px 0 28px 0;
+    margin: 10px 0 10px 0;
     font-size: 2.7em;
     font-weight: 800;
     letter-spacing: 0.01em;
+}
+
+.app-subtitle {
+    text-align: center;
+    color: var(--secondary-color);
+    margin: 0 0 28px 0;
+    font-size: 1.1em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    opacity: 0.9;
 }
 
 /* Input Area */

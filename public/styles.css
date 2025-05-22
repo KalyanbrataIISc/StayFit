@@ -1,0 +1,399 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --text-color: #2c3e50;
+    --bg-color: #f5f5f5;
+    --panel-bg: #2c3e50;
+    --panel-text: white;
+    --input-bg: white;
+    --input-border: #ddd;
+}
+
+[data-theme="dark"] {
+    --primary-color: #1a1a1a;
+    --secondary-color: #2c2c2c;
+    --text-color: #ffffff;
+    --bg-color: #121212;
+    --panel-bg: #1a1a1a;
+    --panel-text: #ffffff;
+    --input-bg: #2c2c2c;
+    --input-border: #404040;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Side Panel Styles */
+.side-panel {
+    width: 300px;
+    background-color: var(--panel-bg);
+    color: var(--panel-text);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.side-panel.active {
+    transform: translateX(0);
+}
+
+.side-panel-header {
+    padding: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.panel-hide-btn {
+    background: none;
+    border: none;
+    color: var(--panel-text);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.side-panel-content {
+    padding: 20px;
+}
+
+.menu-section {
+    margin-bottom: 20px;
+}
+
+.menu-item {
+    padding: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.3s;
+    border-radius: 5px;
+}
+
+.menu-item:hover, .menu-item.active {
+    background-color: var(--secondary-color);
+}
+
+.menu-item i {
+    width: 20px;
+}
+
+.section-content {
+    display: none;
+    padding: 15px;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.section-content.active {
+    display: block;
+}
+
+/* Form Styles */
+.data-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.data-form input,
+.data-form select {
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+.action-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.action-btn.delete {
+    background-color: #e74c3c;
+}
+
+.action-btn.delete:hover {
+    background-color: #c0392b;
+}
+
+/* Theme Toggle Switch */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content.shifted {
+    margin-left: 300px;
+}
+
+/* Hamburger Button */
+.hamburger-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-color);
+    padding: 10px;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+}
+
+/* Welcome Message */
+.welcome-message {
+    text-align: center;
+    font-size: 1.2em;
+    margin: 20px 0;
+    color: var(--text-color);
+}
+
+/* App Title */
+.app-title {
+    text-align: center;
+    color: var(--text-color);
+    margin: 20px 0;
+    font-size: 2.5em;
+}
+
+/* Input Area */
+.input-area {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    padding: 15px;
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    resize: vertical;
+    font-size: 16px;
+    margin-bottom: 20px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.analyze-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    display: block;
+    margin: 0 auto;
+}
+
+.analyze-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+/* User List Styles */
+.user-list {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.user-list select {
+    flex: 1;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Nutrition Display */
+.nutrition-display {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: var(--input-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-label {
+    width: 80px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.progress-bar {
+    flex: 1;
+    height: 20px;
+    background-color: var(--input-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.progress-value {
+    width: 100px;
+    text-align: right;
+    color: var(--text-color);
+}
+
+/* Food Breakdown */
+.food-breakdown {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--input-border);
+}
+
+.food-breakdown h3 {
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.food-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: var(--bg-color);
+    border-radius: 5px;
+}
+
+.food-name {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.food-quantity {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.food-note {
+    font-size: 0.9em;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+/* Loading State */
+.analyze-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+} 

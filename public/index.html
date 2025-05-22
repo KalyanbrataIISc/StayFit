@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StayFit</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Side Panel -->
+        <div class="side-panel" id="sidePanel">
+            <div class="side-panel-header">
+                <button class="panel-hide-btn" id="panelHideBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="side-panel-content">
+                <!-- User Profile Section -->
+                <div class="menu-section" id="userSection">
+                    <div class="menu-item active" data-section="user">
+                        <i class="fas fa-user"></i>
+                        <span>User Profile</span>
+                    </div>
+                    <div class="section-content" id="userContent">
+                        <div class="user-list">
+                            <select id="userSelect">
+                                <option value="">Select User</option>
+                            </select>
+                            <button id="newUserBtn" class="action-btn">New User</button>
+                        </div>
+                        <form id="userForm" class="data-form">
+                            <input type="text" id="userName" placeholder="Name" required>
+                            <select id="userGender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="number" id="userAge" placeholder="Age" required>
+                            <input type="number" id="userHeight" placeholder="Height (cm)" required>
+                            <input type="number" id="userWeight" placeholder="Weight (kg)" required>
+                            <div class="form-buttons">
+                                <button type="submit" class="action-btn">Save</button>
+                                <button type="button" id="deleteUserBtn" class="action-btn delete">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Goals Section -->
+                <div class="menu-section" id="goalsSection">
+                    <div class="menu-item" data-section="goals">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Goals</span>
+                    </div>
+                    <div class="section-content" id="goalsContent">
+                        <form id="goalsForm" class="data-form">
+                            <input type="number" id="dailyCalories" placeholder="Daily Calorie Target" required>
+                            <input type="number" id="targetWeight" placeholder="Target Weight (kg)" required>
+                            <button type="submit" class="action-btn">Save Goals</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="menu-section" id="settingsSection">
+                    <div class="menu-item" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </div>
+                    <div class="section-content" id="settingsContent">
+                        <form id="settingsForm" class="data-form">
+                            <div class="theme-toggle">
+                                <span>Theme:</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="themeToggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <input type="text" id="apiKey" placeholder="Gemini API Key (optional)">
+                            <button type="submit" class="action-btn">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Hamburger Button -->
+            <button class="hamburger-btn" id="hamburgerBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Welcome Message -->
+            <div class="welcome-message" id="welcomeMessage">
+                Welcome to StayFit
+            </div>
+
+            <!-- App Title -->
+            <h1 class="app-title">StayFit</h1>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <textarea id="userInput" placeholder="Enter your fitness goals or questions here..."></textarea>
+                <button id="analyzeBtn" class="analyze-btn">Analyze</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 

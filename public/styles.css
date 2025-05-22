@@ -1,36 +1,48 @@
+/* Modern, Consistent, Visually Appealing Styles for StayFit */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Inter', 'Arial', sans-serif;
 }
 
 :root {
     --primary-color: #2c3e50;
-    --secondary-color: #34495e;
+    --secondary-color: #4a90e2;
+    --accent-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --warning-color: #f1c40f;
     --text-color: #2c3e50;
-    --bg-color: #f5f5f5;
-    --panel-bg: #2c3e50;
-    --panel-text: white;
-    --input-bg: white;
-    --input-border: #ddd;
+    --bg-color: #f7fafd;
+    --panel-bg: #ffffff;
+    --panel-text: #2c3e50;
+    --input-bg: #f9fbfd;
+    --input-border: #dbe6ef;
+    --shadow: 0 4px 24px 0 rgba(44, 62, 80, 0.08);
 }
 
 [data-theme="dark"] {
     --primary-color: #1a1a1a;
-    --secondary-color: #2c2c2c;
-    --text-color: #ffffff;
-    --bg-color: #121212;
-    --panel-bg: #1a1a1a;
-    --panel-text: #ffffff;
-    --input-bg: #2c2c2c;
+    --secondary-color: #357ab8;
+    --accent-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f1c40f;
+    --text-color: #f7fafd;
+    --bg-color: #181c22;
+    --panel-bg: #23272f;
+    --panel-text: #f7fafd;
+    --input-bg: #23272f;
     --input-border: #404040;
+    --shadow: 0 4px 24px 0 rgba(44, 62, 80, 0.18);
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
+    font-size: 17px;
+    min-height: 100vh;
 }
 
 .container {
@@ -40,7 +52,7 @@ body {
 
 /* Side Panel Styles */
 .side-panel {
-    width: 300px;
+    width: 350px;
     background-color: var(--panel-bg);
     color: var(--panel-text);
     transform: translateX(-100%);
@@ -49,6 +61,8 @@ body {
     height: 100vh;
     z-index: 1000;
     overflow-y: auto;
+    box-shadow: var(--shadow);
+    border-right: 1.5px solid var(--input-border);
 }
 
 .side-panel.active {
@@ -56,7 +70,7 @@ body {
 }
 
 .side-panel-header {
-    padding: 15px;
+    padding: 18px 18px 0 18px;
     display: flex;
     justify-content: flex-end;
 }
@@ -65,45 +79,51 @@ body {
     background: none;
     border: none;
     color: var(--panel-text);
-    font-size: 20px;
+    font-size: 22px;
     cursor: pointer;
     padding: 5px;
+    transition: color 0.2s;
+}
+.panel-hide-btn:hover {
+    color: var(--secondary-color);
 }
 
 .side-panel-content {
-    padding: 20px;
+    padding: 24px 18px 18px 18px;
 }
 
 .menu-section {
-    margin-bottom: 20px;
+    margin-bottom: 28px;
 }
 
 .menu-item {
-    padding: 15px;
+    padding: 15px 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
-    transition: background-color 0.3s;
-    border-radius: 5px;
+    gap: 12px;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 7px;
+    font-weight: 600;
+    color: var(--panel-text);
 }
-
 .menu-item:hover, .menu-item.active {
     background-color: var(--secondary-color);
+    color: #fff;
 }
-
 .menu-item i {
-    width: 20px;
+    width: 22px;
+    font-size: 1.1em;
 }
 
 .section-content {
     display: none;
-    padding: 15px;
-    background-color: var(--secondary-color);
-    border-radius: 5px;
+    padding: 18px 12px 12px 12px;
+    background-color: var(--input-bg);
+    border-radius: 8px;
     margin-top: 10px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.04);
 }
-
 .section-content.active {
     display: block;
 }
@@ -112,36 +132,44 @@ body {
 .data-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 13px;
 }
-
 .data-form input,
 .data-form select {
-    padding: 10px;
-    border: 1px solid var(--input-border);
-    border-radius: 5px;
+    padding: 12px 13px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 6px;
     background-color: var(--input-bg);
     color: var(--text-color);
+    font-size: 1em;
+    transition: border-color 0.2s;
+}
+.data-form input:focus,
+.data-form select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
 }
 
 .action-btn {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 11px 22px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 2px rgba(44,62,80,0.04);
 }
-
 .action-btn:hover {
     background-color: var(--secondary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.10);
 }
-
 .action-btn.delete {
-    background-color: #e74c3c;
+    background-color: var(--danger-color);
 }
-
 .action-btn.delete:hover {
     background-color: #c0392b;
 }
@@ -153,20 +181,17 @@ body {
     justify-content: space-between;
     margin-bottom: 10px;
 }
-
 .switch {
     position: relative;
     display: inline-block;
     width: 60px;
     height: 34px;
 }
-
 .switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
-
 .slider {
     position: absolute;
     cursor: pointer;
@@ -177,7 +202,6 @@ body {
     background-color: #ccc;
     transition: .4s;
 }
-
 .slider:before {
     position: absolute;
     content: "";
@@ -188,19 +212,15 @@ body {
     background-color: white;
     transition: .4s;
 }
-
 input:checked + .slider {
     background-color: var(--primary-color);
 }
-
 input:checked + .slider:before {
     transform: translateX(26px);
 }
-
 .slider.round {
     border-radius: 34px;
 }
-
 .slider.round:before {
     border-radius: 50%;
 }
@@ -208,85 +228,108 @@ input:checked + .slider:before {
 /* Main Content Styles */
 .main-content {
     flex: 1;
-    padding: 20px;
+    padding: 38px 28px 28px 28px;
     margin-left: 0;
     transition: margin-left 0.3s ease;
+    background: var(--bg-color);
+    min-height: 100vh;
+    color: var(--text-color);
 }
-
 .main-content.shifted {
-    margin-left: 300px;
+    margin-left: 320px;
 }
 
 /* Hamburger Button */
 .hamburger-btn {
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 28px;
     cursor: pointer;
     color: var(--text-color);
     padding: 10px;
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 24px;
+    left: 24px;
     z-index: 1001;
+    border-radius: 50%;
+    transition: background 0.2s, opacity 0.3s ease;
+    opacity: 1;
+}
+.hamburger-btn:hover {
+    background: #eaf6ff;
+}
+.hamburger-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Welcome Message */
 .welcome-message {
     text-align: center;
-    font-size: 1.2em;
-    margin: 20px 0;
-    color: var(--text-color);
+    font-size: 1.25em;
+    margin: 18px 0 10px 0;
+    color: var(--secondary-color);
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
 /* App Title */
 .app-title {
     text-align: center;
-    color: var(--text-color);
-    margin: 20px 0;
-    font-size: 2.5em;
+    color: var(--primary-color);
+    margin: 10px 0 28px 0;
+    font-size: 2.7em;
+    font-weight: 800;
+    letter-spacing: 0.01em;
 }
 
 /* Input Area */
 .input-area {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 28px 24px 18px 24px;
+    background: var(--panel-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--input-border);
+    color: var(--text-color);
 }
 
 textarea {
     width: 100%;
-    height: 200px;
-    padding: 15px;
-    border: 2px solid var(--input-border);
+    height: 180px;
+    padding: 16px 14px;
+    border: 1.5px solid var(--input-border);
     border-radius: 8px;
     resize: vertical;
-    font-size: 16px;
+    font-size: 1.08em;
     margin-bottom: 20px;
     background-color: var(--input-bg);
     color: var(--text-color);
+    transition: border-color 0.2s;
 }
-
 textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: var(--secondary-color);
 }
 
 .analyze-btn {
-    background-color: var(--primary-color);
+    background: linear-gradient(90deg, var(--secondary-color) 60%, var(--primary-color) 100%);
     color: white;
     border: none;
-    padding: 12px 30px;
+    padding: 14px 36px;
     border-radius: 25px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
+    font-size: 1.13em;
+    font-weight: 700;
+    transition: background 0.2s, box-shadow 0.2s;
     display: block;
     margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.10);
 }
-
 .analyze-btn:hover {
-    background-color: var(--secondary-color);
+    background: linear-gradient(90deg, var(--primary-color) 60%, var(--secondary-color) 100%);
+    box-shadow: 0 4px 16px rgba(44,62,80,0.16);
 }
 
 /* User List Styles */
@@ -295,7 +338,6 @@ textarea:focus {
     gap: 10px;
     margin-bottom: 15px;
 }
-
 .user-list select {
     flex: 1;
 }
@@ -308,92 +350,443 @@ textarea:focus {
 
 /* Nutrition Display */
 .nutrition-display {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: var(--input-bg);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 32px;
+    padding: 24px 20px 20px 20px;
+    background-color: var(--panel-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--input-border);
+    color: var(--text-color);
 }
 
 .progress-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 18px;
+    margin-bottom: 24px;
 }
-
 .progress-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
 }
-
 .progress-label {
-    width: 80px;
-    font-weight: bold;
-    color: var(--text-color);
+    width: 90px;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.08em;
 }
-
 .progress-bar {
     flex: 1;
-    height: 20px;
+    height: 22px;
     background-color: var(--input-border);
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
 }
-
 .progress-fill {
     height: 100%;
     width: 0;
     transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 12px;
 }
-
 .progress-value {
-    width: 100px;
+    width: 110px;
     text-align: right;
     color: var(--text-color);
+    font-size: 1.05em;
 }
 
 /* Food Breakdown */
 .food-breakdown {
-    margin-top: 20px;
+    margin-top: 24px;
     padding-top: 20px;
-    border-top: 1px solid var(--input-border);
+    border-top: 1.5px solid var(--input-border);
+    color: var(--text-color);
 }
-
 .food-breakdown h3 {
-    margin-bottom: 15px;
-    color: var(--text-color);
+    margin-bottom: 18px;
+    color: var(--primary-color);
+    font-size: 1.25em;
+    font-weight: 700;
+    letter-spacing: 0.01em;
 }
 
-.food-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    margin-bottom: 5px;
-    background-color: var(--bg-color);
-    border-radius: 5px;
-}
-
-.food-name {
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-.food-quantity {
-    color: var(--text-color);
-    opacity: 0.8;
-}
-
-.food-note {
-    font-size: 0.9em;
-    color: var(--text-color);
-    opacity: 0.7;
-}
+/* Food Card Styles (already modernized above) */
 
 /* Loading State */
 .analyze-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 1100px) {
+    .main-content {
+        padding: 18px 6vw 18px 6vw;
+    }
+    .input-area, .nutrition-display {
+        max-width: 98vw;
+        padding: 18px 2vw;
+    }
+}
+@media (max-width: 800px) {
+    .side-panel {
+        width: 100vw;
+        position: fixed;
+        left: 0;
+        top: 0;
+        border-radius: 0;
+        border-right: none;
+    }
+    .main-content.shifted {
+        margin-left: 0;
+    }
+    .input-area, .nutrition-display {
+        padding: 12px 2vw;
+    }
+}
+@media (max-width: 600px) {
+    .main-content {
+        padding: 8px 2vw 8px 2vw;
+    }
+    .input-area, .nutrition-display {
+        padding: 8px 1vw;
+    }
+    .app-title {
+        font-size: 1.5em;
+    }
+}
+
+.food-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 0 18px 0;
+    margin-bottom: 32px;
+    background: var(--panel-bg) !important;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px 0 rgba(44, 62, 80, 0.10);
+    border: 1.5px solid var(--input-border) !important;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    color: var(--text-color);
+}
+.food-item:hover {
+    box-shadow: 0 8px 32px 0 rgba(44, 62, 80, 0.18);
+    transform: translateY(-2px) scale(1.01);
+    background: var(--panel-bg) !important;
+}
+
+.food-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(90deg, #eaf6ff 60%, #f7fafd 100%);
+    padding: 18px 22px 12px 22px;
+    border-bottom: 1.5px solid var(--input-border);
+}
+.food-name-input {
+    flex: 2;
+    padding: 8px 12px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1.13em;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin-right: 8px;
+}
+.food-quantity-input {
+    width: 70px;
+    padding: 8px 7px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+}
+.food-unit-input {
+    width: 90px;
+    padding: 8px 7px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+}
+
+.food-nutrition {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f7fbff;
+    border-radius: 0 0 12px 12px;
+    padding: 18px 22px 10px 22px;
+    margin: 0;
+    border-bottom: 1.5px solid var(--input-border);
+    border-top: none;
+}
+.nutrition-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 1.05em;
+}
+.nutrition-label {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-right: 6px;
+}
+.nutrition-value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #eaf6ff;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 1em;
+}
+.nutrition-input {
+    width: 54px;
+    padding: 2px 4px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    background-color: #fff;
+    color: var(--text-color);
+    font-size: 1em;
+    text-align: right;
+    margin-left: 2px;
+}
+.nutrition-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #f0f8ff;
+}
+
+.food-note {
+    font-size: 0.99em;
+    color: var(--secondary-color);
+    opacity: 0.92;
+    margin: 10px 0 0 22px;
+    font-style: italic;
+    padding-left: 2px;
+}
+
+.food-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    margin: 14px 22px 0 22px;
+}
+.food-action-btn {
+    padding: 8px 22px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 2px rgba(44,62,80,0.04);
+    color: white;
+}
+.food-action-btn.save {
+    background-color: var(--accent-color);
+}
+.food-action-btn.delete {
+    background-color: var(--danger-color);
+}
+.food-action-btn:hover {
+    opacity: 0.97;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+}
+.add-food-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin-top: 10px;
+    background: linear-gradient(90deg, var(--secondary-color) 60%, var(--primary-color) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.18em;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.add-food-btn:hover {
+    background: linear-gradient(90deg, var(--primary-color) 60%, var(--secondary-color) 100%);
+    box-shadow: 0 4px 16px rgba(44,62,80,0.16);
+}
+
+#saveAllBtn {
+    margin-bottom: 22px;
+}
+
+/* Calendar Styles */
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.calendar-controls h3 {
+    font-size: 1.1em;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin: 0 8px;
+}
+
+.calendar-controls button {
+    padding: 6px 10px;
+    font-size: 0.85em;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 15px;
+}
+
+.calendar-grid .weekday {
+    text-align: center;
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 4px;
+    font-size: 0.8em;
+}
+
+.calendar-grid .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 0.85em;
+    min-height: 24px;
+}
+
+.calendar-grid .day:hover {
+    background-color: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.calendar-grid .day.today {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.calendar-grid .day.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.calendar-grid .day.has-data::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    width: 3px;
+    height: 3px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+}
+
+.calendar-grid .day.other-month {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.day-details {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.day-details h4 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+#dayFoodItems {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#dayFoodItems .food-item {
+    margin-bottom: 0;
+}
+
+#dayFoodItems .food-item:hover {
+    transform: none;
+}
+
+/* Add to existing media queries */
+@media (max-width: 800px) {
+    .calendar-grid {
+        gap: 2px;
+    }
+    
+    .calendar-grid .day {
+        font-size: 0.75em;
+        min-height: 20px;
+    }
+}
+
+[data-theme="dark"] .app-title,
+[data-theme="dark"] .progress-label,
+[data-theme="dark"] .food-breakdown h3,
+[data-theme="dark"] .nutrition-label,
+[data-theme="dark"] .calendar-controls h3,
+[data-theme="dark"] .calendar-grid .weekday {
+    color: var(--secondary-color) !important;
+}
+
+[data-theme="dark"] #selectedDate,
+[data-theme="dark"] .day-details h4 {
+    color: var(--secondary-color) !important;
+}
+
+[data-theme="dark"] .food-header {
+    background: linear-gradient(90deg, #23272f 60%, #181c22 100%) !important;
+}
+
+[data-theme="dark"] .food-nutrition {
+    background: var(--panel-bg) !important;
+}
+
+[data-theme="dark"] .nutrition-input {
+    background: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--input-border) !important;
+}
+
+[data-theme="dark"] .food-name-input, [data-theme="dark"] .food-quantity-input, [data-theme="dark"] .food-unit-input {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1.5px solid var(--input-border);
+}
+
+[data-theme="dark"] .nutrition-value {
+    background: #23272f !important;
+}
+
+[data-theme="dark"] .hamburger-btn:hover {
+    background: var(--input-bg) !important;
 } 

@@ -64,6 +64,26 @@
                     </div>
                 </div>
 
+                <!-- Calendar Section -->
+                <div class="menu-section" id="calendarSection">
+                    <div class="menu-item" data-section="calendar">
+                        <i class="fas fa-calendar"></i>
+                        <span>Calendar</span>
+                    </div>
+                    <div class="section-content" id="calendarContent">
+                        <div class="calendar-controls">
+                            <button id="prevMonthBtn" class="action-btn"><i class="fas fa-chevron-left"></i></button>
+                            <h3 id="currentMonth"></h3>
+                            <button id="nextMonthBtn" class="action-btn"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div id="calendarGrid" class="calendar-grid"></div>
+                        <div id="dayDetails" class="day-details">
+                            <h4 id="selectedDate"></h4>
+                            <div id="dayFoodItems"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Settings Section -->
                 <div class="menu-section" id="settingsSection">
                     <div class="menu-item" data-section="settings">
@@ -104,7 +124,7 @@
 
             <!-- Input Area -->
             <div class="input-area">
-                <textarea id="userInput" placeholder="Enter your fitness goals or questions here..."></textarea>
+                <textarea id="userInput" placeholder="What did you eat today?"></textarea>
                 <button id="analyzeBtn" class="analyze-btn">Analyze</button>
             </div>
         </div>

@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const goalsForm = document.getElementById('goalsForm');
     const settingsForm = document.getElementById('settingsForm');
 
+    // Calendar Elements
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+    const currentMonthEl = document.getElementById('currentMonth');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const selectedDateEl = document.getElementById('selectedDate');
+    const dayFoodItems = document.getElementById('dayFoodItems');
+
     // State Management
     let currentUser = null;
     let users = JSON.parse(localStorage.getItem('users')) || {};
@@ -22,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
         theme: 'light',
         apiKey: ''
     };
+    let selectedDate = new Date();
+    let currentMonth = new Date();
+    let foodArray = []; // Initialize foodArray
 
     // Initialize
     initializeApp();
@@ -33,11 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load users
         loadUsers();
         
-        // Update welcome message
-        updateWelcomeMessage();
-        
         // Set up event listeners
         setupEventListeners();
+        
+        // Initialize calendar
+        initializeCalendar();
+
+        // Create nutrition display elements
+        createNutritionDisplay();
+        
+        // Select last opened user if exists
+        const lastUserId = localStorage.getItem('lastUserId');
+        if (lastUserId && users[lastUserId]) {
+            userSelect.value = lastUserId;
+            currentUser = users[lastUserId];
+            fillUserForm(currentUser);
+            fillGoalsForm(currentUser);
+            loadTodayData();
+        }
+        
+        // Update welcome message
+        updateWelcomeMessage();
     }
 
     function loadSettings() {
@@ -62,6 +89,29 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = users[userId].name;
             userSelect.appendChild(option);
         });
+
+        // Add delete food data button to user form if it doesn't exist
+        if (!document.getElementById('deleteFoodDataBtn')) {
+            const deleteFoodDataBtn = document.createElement('button');
+            deleteFoodDataBtn.type = 'button';
+            deleteFoodDataBtn.id = 'deleteFoodDataBtn';
+            deleteFoodDataBtn.className = 'action-btn delete';
+            deleteFoodDataBtn.textContent = 'Delete Food Data';
+            deleteFoodDataBtn.addEventListener('click', () => {
+                if (currentUser && confirm('Are you sure you want to delete all food data for this user? This action cannot be undone.')) {
+                    currentUser.dailyData = {};
+                    users[currentUser.id] = currentUser;
+                    localStorage.setItem('users', JSON.stringify(users));
+                    foodArray = [];
+                    updateNutritionDisplay({ 
+                        nutrition: [], 
+                        progress: { calories: 0, protein: 0, carbs: 0, fat: 0 } 
+                    });
+                    renderCalendar();
+                }
+            });
+            userForm.querySelector('.form-buttons').appendChild(deleteFoodDataBtn);
+        }
     }
 
     function updateWelcomeMessage() {
@@ -84,11 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
         hamburgerBtn.addEventListener('click', () => {
             sidePanel.classList.add('active');
             mainContent.classList.add('shifted');
+            hamburgerBtn.style.display = 'none'; // Hide hamburger when panel is open
         });
 
         panelHideBtn.addEventListener('click', () => {
             sidePanel.classList.remove('active');
             mainContent.classList.remove('shifted');
+            hamburgerBtn.style.display = 'block'; // Show hamburger when panel is closed
         });
 
         // Menu Items
@@ -122,10 +174,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentUser = users[userId];
                 fillUserForm(currentUser);
                 fillGoalsForm(currentUser);
+                loadTodayData();
+                // Save last selected user
+                localStorage.setItem('lastUserId', userId);
             } else {
                 currentUser = null;
                 userForm.reset();
                 goalsForm.reset();
+                foodArray = [];
+                updateNutritionDisplay({ 
+                    nutrition: [], 
+                    progress: { calories: 0, protein: 0, carbs: 0, fat: 0 } 
+                });
+                // Clear last selected user
+                localStorage.removeItem('lastUserId');
             }
             updateWelcomeMessage();
         });
@@ -140,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deleteUserBtn.addEventListener('click', () => {
             if (currentUser) {
-                if (confirm('Are you sure you want to delete this user?')) {
+                if (confirm('Are you sure you want to delete this user and all their data? This action cannot be undone.')) {
                     delete users[currentUser.id];
                     localStorage.setItem('users', JSON.stringify(users));
                     loadUsers();
@@ -148,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     userForm.reset();
                     goalsForm.reset();
                     updateWelcomeMessage();
+                    renderCalendar();
                 }
             }
         });
@@ -208,59 +271,77 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            try {
-                analyzeBtn.disabled = true;
-                analyzeBtn.textContent = 'Analyzing...';
+            let retryCount = 0;
+            const maxRetries = 3;
 
-                const response = await fetch('/api/analyze-food', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        text,
-                        userGoals: currentUser.goals
-                    })
-                });
+            async function tryAnalyze() {
+                try {
+                    analyzeBtn.disabled = true;
+                    analyzeBtn.textContent = retryCount > 0 ? `Analyzing... (Attempt ${retryCount + 1}/${maxRetries})` : 'Analyzing...';
 
-                const data = await response.json();
-                if (response.ok) {
-                    // Merge new foods with existing window.foodArray
-                    let newFoods = Array.isArray(data.nutrition) ? data.nutrition : [];
-                    if (window.foodArray && window.foodArray.length > 0) {
-                        // Avoid duplicate food names (optional: can be smarter)
-                        const existingNames = new Set(window.foodArray.map(f => f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
-                        newFoods = newFoods.filter(f => !existingNames.has(f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
-                        window.foodArray = window.foodArray.concat(newFoods);
-                    } else {
-                        window.foodArray = newFoods;
-                    }
-                    // Recalculate progress
-                    let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
-                    window.foodArray.forEach(food => {
-                        if (food.total_nutrition_for_user) {
-                            totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
-                            totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
-                            totalCarbs += Number(food.total_nutrition_for_user.carbs) || 0;
-                            totalFat += Number(food.total_nutrition_for_user.fat) || 0;
-                        }
+                    const response = await fetch('/api/analyze-food', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            text,
+                            userGoals: currentUser.goals
+                        })
                     });
-                    const newProgress = {
-                        calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
-                        protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
-                        carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
-                        fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
-                    };
-                    updateNutritionDisplay({ nutrition: window.foodArray, progress: newProgress });
-                    userInput.value = '';
-                    // Automatically save all after analysis
-                    saveAllFoodItems();
-                } else {
-                    throw new Error(data.error || 'Failed to analyze food intake');
+
+                    const data = await response.json();
+                    if (response.ok) {
+                        // Merge new foods with existing foodArray
+                        let newFoods = Array.isArray(data.nutrition) ? data.nutrition : [];
+                        if (foodArray && foodArray.length > 0) {
+                            // Avoid duplicate food names (optional: can be smarter)
+                            const existingNames = new Set(foodArray.map(f => f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
+                            newFoods = newFoods.filter(f => !existingNames.has(f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
+                            foodArray = foodArray.concat(newFoods);
+                        } else {
+                            foodArray = newFoods;
+                        }
+                        // Recalculate progress
+                        let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+                        foodArray.forEach(food => {
+                            if (food.total_nutrition_for_user) {
+                                totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
+                                totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
+                                totalCarbs += Number(food.total_nutrition_for_user.carbs) || 0;
+                                totalFat += Number(food.total_nutrition_for_user.fat) || 0;
+                            }
+                        });
+                        const newProgress = {
+                            calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
+                            protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
+                            carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
+                            fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
+                        };
+                        updateNutritionDisplay({ nutrition: foodArray, progress: newProgress });
+                        userInput.value = '';
+                        // Automatically save all after analysis
+                        saveAllFoodItems();
+                        return true; // Success
+                    } else {
+                        throw new Error(data.error || 'Failed to analyze food intake');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (retryCount < maxRetries - 1) {
+                        retryCount++;
+                        // Wait for 1 second before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        return tryAnalyze(); // Retry
+                    }
+                    throw error; // If all retries failed, throw the error
                 }
+            }
+
+            try {
+                await tryAnalyze();
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error analyzing food intake. Please try again.');
+                alert('Error analyzing food intake. Please try again later.');
             } finally {
                 analyzeBtn.disabled = false;
                 analyzeBtn.textContent = 'Analyze';
@@ -287,46 +368,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function loadTodayData() {
+        if (!currentUser) return; // Add safety check
+
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        
+        if (currentUser.dailyData && currentUser.dailyData[dateStr]) {
+            foodArray = currentUser.dailyData[dateStr].foods || [];
+            updateNutritionDisplay({ 
+                nutrition: foodArray, 
+                progress: currentUser.dailyData[dateStr].progress || {} 
+            });
+        } else {
+            foodArray = [];
+            updateNutritionDisplay({ 
+                nutrition: [], 
+                progress: { calories: 0, protein: 0, carbs: 0, fat: 0 } 
+            });
+        }
+    }
+
     // Add new DOM elements for nutrition display
-    const nutritionDisplay = document.createElement('div');
-    nutritionDisplay.className = 'nutrition-display';
-    nutritionDisplay.innerHTML = `
-        <div class="progress-container">
-            <div class="progress-item">
-                <div class="progress-label">Calories</div>
-                <div class="progress-bar">
-                    <div class="progress-fill calories"></div>
+    function createNutritionDisplay() {
+        const nutritionDisplay = document.createElement('div');
+        nutritionDisplay.className = 'nutrition-display';
+        nutritionDisplay.innerHTML = `
+            <div class="progress-container">
+                <div class="progress-item">
+                    <div class="progress-label">Calories</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill calories"></div>
+                    </div>
+                    <div class="progress-value">0/0 kcal</div>
                 </div>
-                <div class="progress-value">0/0 kcal</div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-label">Protein</div>
-                <div class="progress-bar">
-                    <div class="progress-fill protein"></div>
+                <div class="progress-item">
+                    <div class="progress-label">Protein</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill protein"></div>
+                    </div>
+                    <div class="progress-value">0/0 g</div>
                 </div>
-                <div class="progress-value">0/0 g</div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-label">Carbs</div>
-                <div class="progress-bar">
-                    <div class="progress-fill carbs"></div>
+                <div class="progress-item">
+                    <div class="progress-label">Carbs</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill carbs"></div>
+                    </div>
+                    <div class="progress-value">0/0 g</div>
                 </div>
-                <div class="progress-value">0/0 g</div>
-            </div>
-            <div class="progress-item">
-                <div class="progress-label">Fat</div>
-                <div class="progress-bar">
-                    <div class="progress-fill fat"></div>
+                <div class="progress-item">
+                    <div class="progress-label">Fat</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill fat"></div>
+                    </div>
+                    <div class="progress-value">0/0 g</div>
                 </div>
-                <div class="progress-value">0/0 g</div>
             </div>
-        </div>
-        <div class="food-breakdown"></div>
-    `;
-    document.querySelector('.input-area').appendChild(nutritionDisplay);
+            <div class="food-breakdown"></div>
+        `;
+        document.querySelector('.input-area').appendChild(nutritionDisplay);
+    }
 
     // Store nutrition data globally
-    window.foodArray = [];
+    window.foodArray = foodArray;
     window.progress = {};
 
     function updateNutritionDisplay(data) {
@@ -367,8 +471,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return food;
             });
-            window.foodArray = nutrition;
-            window.foodArray.forEach(food => {
+            foodArray = nutrition;
+            foodArray.forEach(food => {
                 if (food.total_nutrition_for_user) {
                     totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
                     totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
@@ -387,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else if (nutrition && typeof nutrition === 'object') {
-            window.foodArray = nutrition.food_breakdown || data.matched_foods || [];
+            foodArray = nutrition.food_breakdown || data.matched_foods || [];
             totalCalories = nutrition.total_calories || 0;
             totalProtein = nutrition.total_protein || 0;
             totalCarbs = nutrition.total_carbs || 0;
@@ -420,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
             breakdownDiv.insertBefore(saveAllBtn, breakdownDiv.firstChild.nextSibling);
         }
 
-        window.foodArray.forEach((food, index) => {
+        foodArray.forEach((food, index) => {
             const foodDiv = document.createElement('div');
             foodDiv.className = 'food-item';
             foodDiv.dataset.index = index;
@@ -491,6 +595,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Save all food items at once
     function saveAllFoodItems() {
+        if (!currentUser) return;
+
         // For each food card, update the corresponding food object
         document.querySelectorAll('.food-item').forEach(foodItem => {
             const index = foodItem.dataset.index;
@@ -498,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const quantityInput = foodItem.querySelector('.food-quantity-input');
             const unitInput = foodItem.querySelector('.food-unit-input');
             const nutritionInputs = foodItem.querySelectorAll('.nutrition-input');
-            const food = window.foodArray[index];
+            const food = foodArray[index];
             food.food_name = nameInput.value;
             food.user_quantity = Number(quantityInput.value);
             food.user_unit = unitInput.value;
@@ -531,9 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
         });
-        // Recalculate progress
+
+        // Calculate totals
         let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
-        window.foodArray.forEach(food => {
+        foodArray.forEach(food => {
             if (food.total_nutrition_for_user) {
                 totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
                 totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
@@ -541,21 +648,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalFat += Number(food.total_nutrition_for_user.fat) || 0;
             }
         });
-        const newProgress = {
+
+        // Calculate progress
+        const progress = {
             calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
             protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
             carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
             fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
         };
-        updateNutritionDisplay({ nutrition: window.foodArray, progress: newProgress });
+
+        // Get current date string in local timezone
+        const now = selectedDate instanceof Date ? selectedDate : new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        // Initialize dailyData if it doesn't exist
+        if (!currentUser.dailyData) {
+            currentUser.dailyData = {};
+        }
+
+        // Save or remove current food array and progress
+        if (foodArray.length > 0) {
+            currentUser.dailyData[dateStr] = {
+                foods: foodArray,
+                progress: progress
+            };
+        } else {
+            // Remove the date entry if no foods
+            delete currentUser.dailyData[dateStr];
+        }
+
+        // Update users object and save to localStorage
+        users[currentUser.id] = currentUser;
+        localStorage.setItem('users', JSON.stringify(users));
+
+        // Update the display immediately
+        updateNutritionDisplay({ 
+            nutrition: foodArray, 
+            progress: progress 
+        });
+
+        // Update calendar display
+        renderCalendar();
     }
 
     function deleteFoodItem(index) {
         if (confirm('Are you sure you want to delete this food item?')) {
-            window.foodArray.splice(index, 1);
+            foodArray.splice(index, 1);
             // Recalculate totals after deletion
             let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
-            window.foodArray.forEach(food => {
+            foodArray.forEach(food => {
                 if (food.total_nutrition_for_user) {
                     totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
                     totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
@@ -570,8 +711,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
                 fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
             };
+            // Get current date string in local timezone
+            const now = selectedDate instanceof Date ? selectedDate : new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            // Remove the date entry if no foods
+            if (foodArray.length === 0 && currentUser.dailyData) {
+                delete currentUser.dailyData[dateStr];
+            }
             // Update the display with new totals
-            updateNutritionDisplay({ nutrition: window.foodArray, progress: newProgress });
+            updateNutritionDisplay({ nutrition: foodArray, progress: newProgress });
+            renderCalendar();
         }
     }
     window.deleteFoodItem = deleteFoodItem;
@@ -595,13 +744,15 @@ document.addEventListener('DOMContentLoaded', () => {
             note: 'Manually added food item'
         };
 
-        window.foodArray.push(newFood);
-        updateNutritionDisplay({ nutrition: window.foodArray, progress: window.progress });
+        foodArray.push(newFood);
+        updateNutritionDisplay({ nutrition: foodArray, progress: window.progress });
     }
 
     function updateProgressBar(type, percentage, current, target, unit) {
         const fill = document.querySelector(`.progress-fill.${type}`);
         const value = document.querySelector(`.progress-item:nth-child(${getProgressItemIndex(type)}) .progress-value`);
+        
+        if (!fill || !value) return; // Add safety check
         
         // Ensure percentage doesn't exceed 100%
         const cappedPercentage = Math.min(percentage, 100);
@@ -641,4 +792,177 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose these functions globally for onclick handlers
     window.saveFoodItem = saveFoodItem;
     window.deleteFoodItem = deleteFoodItem;
+
+    // Calendar Functions
+    function initializeCalendar() {
+        // Add weekday headers
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        weekdays.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'weekday';
+            dayEl.textContent = day;
+            calendarGrid.appendChild(dayEl);
+        });
+
+        // Set up calendar navigation
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth.setMonth(currentMonth.getMonth() - 1);
+            renderCalendar();
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // Initial render
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        // Clear existing days
+        calendarGrid.innerHTML = '';
+
+        // Add weekday headers
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        weekdays.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'weekday';
+            dayEl.textContent = day;
+            calendarGrid.appendChild(dayEl);
+        });
+
+        // Update month display
+        currentMonthEl.textContent = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        // Get first day of month and total days
+        const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        const totalDays = lastDay.getDate();
+        const startingDay = firstDay.getDay();
+
+        // Add days from previous month
+        const prevMonthLastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0).getDate();
+        for (let i = startingDay - 1; i >= 0; i--) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'day other-month';
+            dayEl.textContent = prevMonthLastDay - i;
+            calendarGrid.appendChild(dayEl);
+        }
+
+        // Add days of current month
+        for (let i = 1; i <= totalDays; i++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'day';
+            dayEl.textContent = i;
+
+            const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+            const dateStr = date.toISOString().split('T')[0];
+
+            // Check if it's today
+            if (date.toDateString() === new Date().toDateString()) {
+                dayEl.classList.add('today');
+            }
+
+            // Check if it's selected
+            if (date.toDateString() === selectedDate.toDateString()) {
+                dayEl.classList.add('selected');
+            }
+
+            // Check if it has data
+            if (currentUser && currentUser.dailyData) {
+                if (currentUser.dailyData[dateStr] && currentUser.dailyData[dateStr].foods && currentUser.dailyData[dateStr].foods.length > 0) {
+                    dayEl.classList.add('has-data');
+                }
+            }
+
+            dayEl.addEventListener('click', () => {
+                selectedDate = date;
+                renderCalendar();
+                loadDayData(date);
+            });
+
+            calendarGrid.appendChild(dayEl);
+        }
+
+        // Add days from next month
+        const remainingDays = 42 - (startingDay + totalDays); // 42 = 6 rows * 7 days
+        for (let i = 1; i <= remainingDays; i++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'day other-month';
+            dayEl.textContent = i;
+            calendarGrid.appendChild(dayEl);
+        }
+    }
+
+    function loadDayData(date) {
+        // Format date string in local timezone
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        
+        selectedDateEl.textContent = date.toLocaleDateString('default', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+
+        // Clear existing items
+        dayFoodItems.innerHTML = '';
+
+        if (currentUser && currentUser.dailyData && currentUser.dailyData[dateStr]) {
+            const dayData = currentUser.dailyData[dateStr];
+            foodArray = dayData.foods || [];
+            updateNutritionDisplay({ 
+                nutrition: foodArray, 
+                progress: dayData.progress || {} 
+            });
+        } else {
+            foodArray = [];
+            updateNutritionDisplay({ 
+                nutrition: [], 
+                progress: { calories: 0, protein: 0, carbs: 0, fat: 0 } 
+            });
+        }
+    }
+
+    // Add clear data button to settings form
+    const clearDataBtn = document.createElement('button');
+    clearDataBtn.type = 'button';
+    clearDataBtn.className = 'action-btn delete';
+    clearDataBtn.textContent = 'Clear All Data';
+    clearDataBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear all data? This will delete all food entries for all users. This action cannot be undone.')) {
+            Object.keys(users).forEach(userId => {
+                if (users[userId].dailyData) {
+                    delete users[userId].dailyData;
+                }
+            });
+            localStorage.setItem('users', JSON.stringify(users));
+            if (currentUser) {
+                currentUser.dailyData = {};
+                foodArray = [];
+                updateNutritionDisplay({ 
+                    nutrition: [], 
+                    progress: { calories: 0, protein: 0, carbs: 0, fat: 0 } 
+                });
+                renderCalendar();
+            }
+        }
+    });
+    settingsForm.appendChild(clearDataBtn);
+
+    // Add clear user data button to user form
+    const clearUserDataBtn = document.createElement('button');
+    clearUserDataBtn.type = 'button';
+    clearUserDataBtn.className = 'action-btn delete';
+    clearUserDataBtn.textContent = 'Clear User Data';
+    clearUserDataBtn.addEventListener('click', () => {
+        if (currentUser && confirm('Are you sure you want to clear all food data for this user? This action cannot be undone.')) {
+            currentUser.dailyData = {};
+            users[currentUser.id] = currentUser;
+            localStorage.setItem('users', JSON.stringify(users));
+            renderCalendar();
+        }
+    });
+    userForm.querySelector('.form-buttons').appendChild(clearUserDataBtn);
 }); 

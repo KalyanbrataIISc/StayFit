@@ -52,7 +52,7 @@ body {
 
 /* Side Panel Styles */
 .side-panel {
-    width: 320px;
+    width: 350px;
     background-color: var(--panel-bg);
     color: var(--panel-text);
     transform: translateX(-100%);
@@ -233,6 +233,7 @@ input:checked + .slider:before {
     transition: margin-left 0.3s ease;
     background: var(--bg-color);
     min-height: 100vh;
+    color: var(--text-color);
 }
 .main-content.shifted {
     margin-left: 320px;
@@ -251,10 +252,15 @@ input:checked + .slider:before {
     left: 24px;
     z-index: 1001;
     border-radius: 50%;
-    transition: background 0.2s;
+    transition: background 0.2s, opacity 0.3s ease;
+    opacity: 1;
 }
 .hamburger-btn:hover {
     background: #eaf6ff;
+}
+.hamburger-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Welcome Message */
@@ -286,6 +292,7 @@ input:checked + .slider:before {
     border-radius: 14px;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--input-border);
+    color: var(--text-color);
 }
 
 textarea {
@@ -349,6 +356,7 @@ textarea:focus {
     border-radius: 14px;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--input-border);
+    color: var(--text-color);
 }
 
 .progress-container {
@@ -393,6 +401,7 @@ textarea:focus {
     margin-top: 24px;
     padding-top: 20px;
     border-top: 1.5px solid var(--input-border);
+    color: var(--text-color);
 }
 .food-breakdown h3 {
     margin-bottom: 18px;
@@ -454,17 +463,19 @@ textarea:focus {
     gap: 0;
     padding: 0 0 18px 0;
     margin-bottom: 32px;
-    background: var(--panel-bg);
+    background: var(--panel-bg) !important;
     border-radius: 16px;
     box-shadow: 0 4px 24px 0 rgba(44, 62, 80, 0.10);
-    border: 1.5px solid var(--input-border);
+    border: 1.5px solid var(--input-border) !important;
     position: relative;
     overflow: hidden;
     transition: box-shadow 0.2s, transform 0.2s;
+    color: var(--text-color);
 }
 .food-item:hover {
     box-shadow: 0 8px 32px 0 rgba(44, 62, 80, 0.18);
     transform: translateY(-2px) scale(1.01);
+    background: var(--panel-bg) !important;
 }
 
 .food-header {
@@ -556,7 +567,7 @@ textarea:focus {
 
 .food-note {
     font-size: 0.99em;
-    color: #4a6fa1;
+    color: var(--secondary-color);
     opacity: 0.92;
     margin: 10px 0 0 22px;
     font-style: italic;
@@ -578,14 +589,13 @@ textarea:focus {
     font-weight: 600;
     transition: background-color 0.2s, box-shadow 0.2s;
     box-shadow: 0 1px 2px rgba(44,62,80,0.04);
+    color: white;
 }
 .food-action-btn.save {
     background-color: var(--accent-color);
-    color: white;
 }
 .food-action-btn.delete {
     background-color: var(--danger-color);
-    color: white;
 }
 .food-action-btn:hover {
     opacity: 0.97;
@@ -614,4 +624,169 @@ textarea:focus {
 
 #saveAllBtn {
     margin-bottom: 22px;
+}
+
+/* Calendar Styles */
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.calendar-controls h3 {
+    font-size: 1.1em;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin: 0 8px;
+}
+
+.calendar-controls button {
+    padding: 6px 10px;
+    font-size: 0.85em;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 15px;
+}
+
+.calendar-grid .weekday {
+    text-align: center;
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 4px;
+    font-size: 0.8em;
+}
+
+.calendar-grid .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 0.85em;
+    min-height: 24px;
+}
+
+.calendar-grid .day:hover {
+    background-color: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.calendar-grid .day.today {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.calendar-grid .day.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.calendar-grid .day.has-data::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    width: 3px;
+    height: 3px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+}
+
+.calendar-grid .day.other-month {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.day-details {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.day-details h4 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+#dayFoodItems {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#dayFoodItems .food-item {
+    margin-bottom: 0;
+}
+
+#dayFoodItems .food-item:hover {
+    transform: none;
+}
+
+/* Add to existing media queries */
+@media (max-width: 800px) {
+    .calendar-grid {
+        gap: 2px;
+    }
+    
+    .calendar-grid .day {
+        font-size: 0.75em;
+        min-height: 20px;
+    }
+}
+
+[data-theme="dark"] .app-title,
+[data-theme="dark"] .progress-label,
+[data-theme="dark"] .food-breakdown h3,
+[data-theme="dark"] .nutrition-label,
+[data-theme="dark"] .calendar-controls h3,
+[data-theme="dark"] .calendar-grid .weekday {
+    color: var(--secondary-color) !important;
+}
+
+[data-theme="dark"] #selectedDate,
+[data-theme="dark"] .day-details h4 {
+    color: var(--secondary-color) !important;
+}
+
+[data-theme="dark"] .food-header {
+    background: linear-gradient(90deg, #23272f 60%, #181c22 100%) !important;
+}
+
+[data-theme="dark"] .food-nutrition {
+    background: var(--panel-bg) !important;
+}
+
+[data-theme="dark"] .nutrition-input {
+    background: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--input-border) !important;
+}
+
+[data-theme="dark"] .food-name-input, [data-theme="dark"] .food-quantity-input, [data-theme="dark"] .food-unit-input {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1.5px solid var(--input-border);
+}
+
+[data-theme="dark"] .nutrition-value {
+    background: #23272f !important;
+}
+
+[data-theme="dark"] .hamburger-btn:hover {
+    background: var(--input-bg) !important;
 } 

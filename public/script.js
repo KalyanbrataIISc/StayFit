@@ -225,7 +225,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
                 if (response.ok) {
-                    updateNutritionDisplay(data);
+                    // Merge new foods with existing window.foodArray
+                    let newFoods = Array.isArray(data.nutrition) ? data.nutrition : [];
+                    if (window.foodArray && window.foodArray.length > 0) {
+                        // Avoid duplicate food names (optional: can be smarter)
+                        const existingNames = new Set(window.foodArray.map(f => f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
+                        newFoods = newFoods.filter(f => !existingNames.has(f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
+                        window.foodArray = window.foodArray.concat(newFoods);
+                    } else {
+                        window.foodArray = newFoods;
+                    }
+                    // Recalculate progress
+                    let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+                    window.foodArray.forEach(food => {
+                        if (food.total_nutrition_for_user) {
+                            totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
+                            totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
+                            totalCarbs += Number(food.total_nutrition_for_user.carbs) || 0;
+                            totalFat += Number(food.total_nutrition_for_user.fat) || 0;
+                        }
+                    });
+                    const newProgress = {
+                        calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
+                        protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
+                        carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
+                        fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
+                    };
+                    updateNutritionDisplay({ nutrition: window.foodArray, progress: newProgress });
+                    userInput.value = '';
+                    // Automatically save all after analysis
+                    saveAllFoodItems();
                 } else {
                     throw new Error(data.error || 'Failed to analyze food intake');
                 }
@@ -296,17 +325,50 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.querySelector('.input-area').appendChild(nutritionDisplay);
 
+    // Store nutrition data globally
+    window.foodArray = [];
+    window.progress = {};
+
     function updateNutritionDisplay(data) {
         console.log('updateNutritionDisplay called with:', data);
         let { nutrition, progress } = data;
 
         // Determine if nutrition is an array (new format) or object (old format)
-        let foodArray = [];
         let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
 
         if (Array.isArray(nutrition)) {
-            foodArray = nutrition;
-            foodArray.forEach(food => {
+            // Normalize web-searched foods to match database structure
+            nutrition = nutrition.map(food => {
+                if (food.total_calories !== undefined) {
+                    // Use user_quantity and user_unit if present, else fallback to quantity/unit
+                    const user_quantity = Number(food.user_quantity || food.quantity || 1);
+                    const user_unit = food.user_unit || food.unit || 'serving';
+                    return {
+                        food_name: food.food_name || food.original_text || 'Unknown Food',
+                        user_quantity,
+                        user_unit,
+                        db_serving_size: 1,
+                        db_serving_unit: user_unit,
+                        db_nutrition_per_serving: {
+                            calories: Number(food.total_calories) / user_quantity,
+                            protein: Number(food.total_protein) / user_quantity,
+                            carbs: Number(food.total_carbs) / user_quantity,
+                            fat: Number(food.total_fat) / user_quantity
+                        },
+                        total_nutrition_for_user: {
+                            calories: Number(food.total_calories),
+                            protein: Number(food.total_protein),
+                            carbs: Number(food.total_carbs),
+                            fat: Number(food.total_fat)
+                        },
+                        note: food.note || '',
+                        source: food.source || ''
+                    };
+                }
+                return food;
+            });
+            window.foodArray = nutrition;
+            window.foodArray.forEach(food => {
                 if (food.total_nutrition_for_user) {
                     totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
                     totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
@@ -325,21 +387,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else if (nutrition && typeof nutrition === 'object') {
-            // fallback for old format
-            foodArray = nutrition.food_breakdown || data.matched_foods || [];
+            window.foodArray = nutrition.food_breakdown || data.matched_foods || [];
             totalCalories = nutrition.total_calories || 0;
             totalProtein = nutrition.total_protein || 0;
             totalCarbs = nutrition.total_carbs || 0;
             totalFat = nutrition.total_fat || 0;
         }
-        console.log('foodArray:', foodArray);
-        console.log('Totals:', { totalCalories, totalProtein, totalCarbs, totalFat });
-        console.log('Progress:', progress);
-
-        // Fallback for progress if undefined
-        progress = progress || { calories: 0, protein: 0, carbs: 0, fat: 0 };
 
         // Update progress bars
+        progress = progress || { calories: 0, protein: 0, carbs: 0, fat: 0 };
         updateProgressBar('calories', progress.calories, totalCalories, currentUser.goals.dailyCalories, 'kcal');
         updateProgressBar('protein', progress.protein, totalProtein, currentUser.goals.dailyCalories * 0.25 / 4, 'g');
         updateProgressBar('carbs', progress.carbs, totalCarbs, currentUser.goals.dailyCalories * 0.5 / 4, 'g');
@@ -349,46 +405,198 @@ document.addEventListener('DOMContentLoaded', () => {
         const breakdownDiv = document.querySelector('.food-breakdown');
         breakdownDiv.innerHTML = '<h3>Food Breakdown</h3>';
 
-        foodArray.forEach(food => {
+        // Add "Save All" button at the top
+        let saveAllBtn = document.getElementById('saveAllBtn');
+        if (!saveAllBtn) {
+            saveAllBtn = document.createElement('button');
+            saveAllBtn.id = 'saveAllBtn';
+            saveAllBtn.className = 'add-food-btn';
+            saveAllBtn.textContent = 'Save All';
+            saveAllBtn.onclick = saveAllFoodItems;
+        }
+        breakdownDiv.appendChild(saveAllBtn);
+        // Move the button to the top
+        if (breakdownDiv.firstChild !== saveAllBtn) {
+            breakdownDiv.insertBefore(saveAllBtn, breakdownDiv.firstChild.nextSibling);
+        }
+
+        window.foodArray.forEach((food, index) => {
             const foodDiv = document.createElement('div');
             foodDiv.className = 'food-item';
-            foodDiv.style.display = 'flex';
-            foodDiv.style.flexDirection = 'column';
-            foodDiv.style.gap = '2px';
-            let html = `<div class="food-row"><span class="food-label"><b>${food.food_name || food.matched_food?.food_name || food.original_text || 'Unknown Food'}</b></span>`;
-            if (food.user_quantity && food.user_unit) {
-                html += ` <span class="food-quantity">${food.user_quantity} ${food.user_unit}</span>`;
-            } else if (food.quantity && food.unit) {
-                html += ` <span class="food-quantity">${food.quantity} ${food.unit}</span>`;
-            }
-            html += '</div>';
+            foodDiv.dataset.index = index;
+
+            // Food header row
+            const headerRow = document.createElement('div');
+            headerRow.className = 'food-header';
+            headerRow.innerHTML = `
+                <input type="text" class="food-name-input" value="${food.food_name || food.matched_food?.food_name || food.original_text || 'Unknown Food'}" placeholder="Food name">
+                <input type="number" class="food-quantity-input" value="${food.user_quantity || food.quantity || 1}" placeholder="Qty">
+                <input type="text" class="food-unit-input" value="${food.user_unit || food.unit || 'serving'}" placeholder="Unit">
+            `;
+            foodDiv.appendChild(headerRow);
+
+            // Nutrition information
+            const nutritionDiv = document.createElement('div');
+            nutritionDiv.className = 'food-nutrition';
             if (food.db_nutrition_per_serving) {
-                html += `<div class="food-row"><span class="food-label">Per ${food.db_serving_unit || ''}:</span> ` +
-                    `<span>Cal: ${Math.round(food.db_nutrition_per_serving.calories) || 0}, </span>` +
-                    `<span>P: ${Math.round(food.db_nutrition_per_serving.protein) || 0}, </span>` +
-                    `<span>C: ${Math.round(food.db_nutrition_per_serving.carbs) || 0}, </span>` +
-                    `<span>F: ${Math.round(food.db_nutrition_per_serving.fat) || 0}</span></div>`;
+                nutritionDiv.innerHTML = `
+                    <div class="nutrition-item">
+                        <span class="nutrition-label">Per ${food.db_serving_unit || 'serving'}:</span>
+                        <span class="nutrition-value">Cal: <input type="number" class="nutrition-input" data-type="calories" data-per-serving="true" value="${Math.round(food.db_nutrition_per_serving.calories) || 0}"></span>
+                        <span class="nutrition-value">P: <input type="number" class="nutrition-input" data-type="protein" data-per-serving="true" value="${Math.round(food.db_nutrition_per_serving.protein) || 0}">g</span>
+                        <span class="nutrition-value">C: <input type="number" class="nutrition-input" data-type="carbs" data-per-serving="true" value="${Math.round(food.db_nutrition_per_serving.carbs) || 0}">g</span>
+                        <span class="nutrition-value">F: <input type="number" class="nutrition-input" data-type="fat" data-per-serving="true" value="${Math.round(food.db_nutrition_per_serving.fat) || 0}">g</span>
+                    </div>
+                `;
             }
             if (food.total_nutrition_for_user) {
-                html += `<div class="food-row"><span class="food-label">Total:</span> ` +
-                    `<span>Cal: ${Math.round(food.total_nutrition_for_user.calories) || 0}, </span>` +
-                    `<span>P: ${Math.round(food.total_nutrition_for_user.protein) || 0}, </span>` +
-                    `<span>C: ${Math.round(food.total_nutrition_for_user.carbs) || 0}, </span>` +
-                    `<span>F: ${Math.round(food.total_nutrition_for_user.fat) || 0}</span></div>`;
+                nutritionDiv.innerHTML += `
+                    <div class="nutrition-item">
+                        <span class="nutrition-label">Total:</span>
+                        <span class="nutrition-value">Cal: <input type="number" class="nutrition-input" data-type="calories" data-per-serving="false" value="${Math.round(food.total_nutrition_for_user.calories) || 0}"></span>
+                        <span class="nutrition-value">P: <input type="number" class="nutrition-input" data-type="protein" data-per-serving="false" value="${Math.round(food.total_nutrition_for_user.protein) || 0}">g</span>
+                        <span class="nutrition-value">C: <input type="number" class="nutrition-input" data-type="carbs" data-per-serving="false" value="${Math.round(food.total_nutrition_for_user.carbs) || 0}">g</span>
+                        <span class="nutrition-value">F: <input type="number" class="nutrition-input" data-type="fat" data-per-serving="false" value="${Math.round(food.total_nutrition_for_user.fat) || 0}">g</span>
+                    </div>
+                `;
             }
-            if (food.total_calories !== undefined && food.total_protein !== undefined && food.total_carbs !== undefined && food.total_fat !== undefined) {
-                html += `<div class="food-row"><span class="food-label">Total:</span> ` +
-                    `<span>Cal: ${Math.round(food.total_calories) || 0}, </span>` +
-                    `<span>P: ${Math.round(food.total_protein) || 0}, </span>` +
-                    `<span>C: ${Math.round(food.total_carbs) || 0}, </span>` +
-                    `<span>F: ${Math.round(food.total_fat) || 0}</span></div>`;
+            foodDiv.appendChild(nutritionDiv);
+
+            // Note and source information
+            if (food.note || food.source) {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'food-note';
+                noteDiv.textContent = food.note || `Source: ${food.source || 'Local database'}`;
+                foodDiv.appendChild(noteDiv);
             }
-            if (food.note) {
-                html += `<div class="food-row"><span class="food-note">${food.note}</span></div>`;
-            }
-            foodDiv.innerHTML = html;
+
+            // Only Delete button per card
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'food-actions';
+            actionsDiv.innerHTML = `
+                <button class="food-action-btn delete" onclick="deleteFoodItem(${index})">Delete</button>
+            `;
+            foodDiv.appendChild(actionsDiv);
+
             breakdownDiv.appendChild(foodDiv);
         });
+
+        // Add "Add Food" button at the bottom
+        const addFoodBtn = document.createElement('button');
+        addFoodBtn.className = 'add-food-btn';
+        addFoodBtn.textContent = 'Add New Food Item';
+        addFoodBtn.onclick = addNewFoodItem;
+        breakdownDiv.appendChild(addFoodBtn);
+    }
+
+    // Save all food items at once
+    function saveAllFoodItems() {
+        // For each food card, update the corresponding food object
+        document.querySelectorAll('.food-item').forEach(foodItem => {
+            const index = foodItem.dataset.index;
+            const nameInput = foodItem.querySelector('.food-name-input');
+            const quantityInput = foodItem.querySelector('.food-quantity-input');
+            const unitInput = foodItem.querySelector('.food-unit-input');
+            const nutritionInputs = foodItem.querySelectorAll('.nutrition-input');
+            const food = window.foodArray[index];
+            food.food_name = nameInput.value;
+            food.user_quantity = Number(quantityInput.value);
+            food.user_unit = unitInput.value;
+            nutritionInputs.forEach(input => {
+                const type = input.dataset.type;
+                const isPerServing = input.dataset.perServing === 'true';
+                const value = Number(input.value) || 0;
+                if (isPerServing) {
+                    if (!food.db_nutrition_per_serving) food.db_nutrition_per_serving = {};
+                    food.db_nutrition_per_serving[type] = value;
+                } else {
+                    if (!food.total_nutrition_for_user) food.total_nutrition_for_user = {};
+                    food.total_nutrition_for_user[type] = value;
+                    if (food.total_calories !== undefined) {
+                        if (type === 'calories') food.total_calories = value;
+                        if (type === 'protein') food.total_protein = value;
+                        if (type === 'carbs') food.total_carbs = value;
+                        if (type === 'fat') food.total_fat = value;
+                    }
+                }
+            });
+            // Recalculate totals if per-serving values were updated
+            if (food.db_nutrition_per_serving) {
+                const multiplier = food.user_quantity;
+                food.total_nutrition_for_user = {
+                    calories: food.db_nutrition_per_serving.calories * multiplier,
+                    protein: food.db_nutrition_per_serving.protein * multiplier,
+                    carbs: food.db_nutrition_per_serving.carbs * multiplier,
+                    fat: food.db_nutrition_per_serving.fat * multiplier
+                };
+            }
+        });
+        // Recalculate progress
+        let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+        window.foodArray.forEach(food => {
+            if (food.total_nutrition_for_user) {
+                totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
+                totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
+                totalCarbs += Number(food.total_nutrition_for_user.carbs) || 0;
+                totalFat += Number(food.total_nutrition_for_user.fat) || 0;
+            }
+        });
+        const newProgress = {
+            calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
+            protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
+            carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
+            fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
+        };
+        updateNutritionDisplay({ nutrition: window.foodArray, progress: newProgress });
+    }
+
+    function deleteFoodItem(index) {
+        if (confirm('Are you sure you want to delete this food item?')) {
+            window.foodArray.splice(index, 1);
+            // Recalculate totals after deletion
+            let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+            window.foodArray.forEach(food => {
+                if (food.total_nutrition_for_user) {
+                    totalCalories += Number(food.total_nutrition_for_user.calories) || 0;
+                    totalProtein += Number(food.total_nutrition_for_user.protein) || 0;
+                    totalCarbs += Number(food.total_nutrition_for_user.carbs) || 0;
+                    totalFat += Number(food.total_nutrition_for_user.fat) || 0;
+                }
+            });
+            // Calculate new progress
+            const newProgress = {
+                calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
+                protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
+                carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
+                fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
+            };
+            // Update the display with new totals
+            updateNutritionDisplay({ nutrition: window.foodArray, progress: newProgress });
+        }
+    }
+    window.deleteFoodItem = deleteFoodItem;
+    function addNewFoodItem() {
+        const newFood = {
+            food_name: 'New Food',
+            user_quantity: 1,
+            user_unit: 'serving',
+            db_nutrition_per_serving: {
+                calories: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0
+            },
+            total_nutrition_for_user: {
+                calories: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0
+            },
+            note: 'Manually added food item'
+        };
+
+        window.foodArray.push(newFood);
+        updateNutritionDisplay({ nutrition: window.foodArray, progress: window.progress });
     }
 
     function updateProgressBar(type, percentage, current, target, unit) {
@@ -415,4 +623,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const types = ['calories', 'protein', 'carbs', 'fat'];
         return types.indexOf(type) + 1;
     }
+
+    // Add event listener for quantity changes
+    function setupQuantityChangeListener() {
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('food-quantity-input')) {
+                const foodItem = e.target.closest('.food-item');
+                const index = foodItem.dataset.index;
+                saveFoodItem(index);
+            }
+        });
+    }
+
+    // Call this after the DOM is loaded
+    setupQuantityChangeListener();
+
+    // Expose these functions globally for onclick handlers
+    window.saveFoodItem = saveFoodItem;
+    window.deleteFoodItem = deleteFoodItem;
 }); 

@@ -1,6 +1,6 @@
 # StayFit
 
-A Node.js application with Gemini AI integration capabilities.
+A Node.js application with Gemini AI integration capabilities. Use this to track your daily calorie intake using natural language. Please go the the setting and add your own Gemini API for uninterupted use.
 
 ## Setup
 

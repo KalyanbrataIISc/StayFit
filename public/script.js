@@ -7,13 +7,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const userInput = document.getElementById('userInput');
     const welcomeMessage = document.getElementById('welcomeMessage');
-    const themeToggle = document.getElementById('themeToggle');
+    const themeSelect = document.getElementById('themeSelect');
+    const loveThemeOption = document.getElementById('loveThemeOption');
     const userSelect = document.getElementById('userSelect');
     const newUserBtn = document.getElementById('newUserBtn');
     const deleteUserBtn = document.getElementById('deleteUserBtn');
     const userForm = document.getElementById('userForm');
     const goalsForm = document.getElementById('goalsForm');
     const settingsForm = document.getElementById('settingsForm');
+
+    // Hide love theme option by default
+    console.log('DOM loaded, hiding love theme option by default');
+    if (loveThemeOption) {
+        loveThemeOption.style.display = 'none';
+        console.log('Love theme option hidden');
+    } else {
+        console.error('Love theme option element not found!');
+    }
 
     // Calendar Elements
     const prevMonthBtn = document.getElementById('prevMonthBtn');
@@ -34,6 +44,79 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMonth = new Date();
     let foodArray = []; // Initialize foodArray
 
+    // Special users who can see the love theme
+    const specialUsers = ['swaru', 'swarnim', 'swarnim sharma'];
+
+    function isSpecialUser(userName) {
+        if (!userName) return false;
+        const result = specialUsers.includes(userName.toLowerCase().trim());
+        console.log(`Checking if "${userName}" is special user:`, result);
+        console.log('Special users list:', specialUsers);
+        console.log('Lowercase name:', userName.toLowerCase().trim());
+        return result;
+    }
+
+    // Test function for debugging (accessible from console)
+    window.testSpecialUser = function(name) {
+        console.log('Testing name:', name);
+        return isSpecialUser(name);
+    };
+
+    // Make functions available for debugging
+    window.updateThemeOptions = updateThemeOptions;
+    window.updateSubtitle = updateSubtitle;
+
+    function updateSubtitle() {
+        console.log('updateSubtitle called');
+        console.log('currentUser:', currentUser?.name);
+        console.log('current theme:', settings.theme);
+        console.log('isSpecialUser:', currentUser ? isSpecialUser(currentUser.name) : false);
+        
+        const subtitleEl = document.querySelector('.app-subtitle');
+        if (currentUser && isSpecialUser(currentUser.name) && settings.theme === 'love') {
+            console.log('Setting special subtitle');
+            subtitleEl.textContent = 'by Keechy, for Swaru';
+        } else {
+            console.log('Setting normal subtitle');
+            subtitleEl.textContent = 'by Kalyanbrata Chandra';
+        }
+    }
+
+    function updateThemeOptions() {
+        console.log('updateThemeOptions called');
+        console.log('currentUser:', currentUser);
+        console.log('currentUser name:', currentUser?.name);
+        console.log('isSpecialUser result:', currentUser ? isSpecialUser(currentUser.name) : false);
+        console.log('loveThemeOption element:', loveThemeOption);
+        
+        if (!loveThemeOption) {
+            console.error('Love theme option element not found!');
+            return;
+        }
+        
+        if (currentUser && isSpecialUser(currentUser.name)) {
+            console.log('Showing love theme option');
+            loveThemeOption.style.display = 'block';
+            loveThemeOption.style.visibility = 'visible';
+        } else {
+            console.log('Hiding love theme option');
+            loveThemeOption.style.display = 'none';
+            loveThemeOption.style.visibility = 'hidden';
+            
+            // If current theme is love and user is not special, switch to light
+            if (settings.theme === 'love') {
+                console.log('Switching from love theme to light');
+                settings.theme = 'light';
+                document.body.setAttribute('data-theme', 'light');
+                localStorage.setItem('settings', JSON.stringify(settings));
+            }
+        }
+        
+        themeSelect.value = settings.theme;
+        console.log('Theme select value set to:', settings.theme);
+        console.log('Love theme option display:', loveThemeOption.style.display);
+    }
+
     // Initialize
     initializeApp();
 
@@ -53,14 +136,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create nutrition display elements
         createNutritionDisplay();
         
+        // Initial theme options update (hide love theme by default)
+        updateThemeOptions();
+        updateSubtitle();
+        
         // Select last opened user if exists
         const lastUserId = localStorage.getItem('lastUserId');
         if (lastUserId && users[lastUserId]) {
             userSelect.value = lastUserId;
             currentUser = users[lastUserId];
+            console.log('Loading last user:', currentUser.name);
             fillUserForm(currentUser);
             fillGoalsForm(currentUser);
             loadTodayData();
+            
+            // Update theme options again after user is loaded
+            updateThemeOptions();
+            updateSubtitle();
+        } else {
+            // No user selected - ensure love theme is not active
+            console.log('No user selected on init');
+            if (settings.theme === 'love') {
+                console.log('No user but love theme active - switching to light');
+                settings.theme = 'light';
+                document.body.setAttribute('data-theme', 'light');
+                localStorage.setItem('settings', JSON.stringify(settings));
+                if (themeSelect) {
+                    themeSelect.value = 'light';
+                }
+            }
         }
         
         // Update welcome message
@@ -70,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadSettings() {
         // Apply theme
         document.body.setAttribute('data-theme', settings.theme);
-        themeToggle.checked = settings.theme === 'dark';
+        // Don't set theme select value here - will be done in updateThemeOptions
         
         // Load API key if exists
         if (settings.apiKey) {
@@ -134,50 +238,84 @@ document.addEventListener('DOMContentLoaded', () => {
         hamburgerBtn.addEventListener('click', () => {
             sidePanel.classList.add('active');
             mainContent.classList.add('shifted');
-            hamburgerBtn.style.display = 'none'; // Hide hamburger when panel is open
         });
 
         panelHideBtn.addEventListener('click', () => {
             sidePanel.classList.remove('active');
             mainContent.classList.remove('shifted');
-            hamburgerBtn.style.display = 'block'; // Show hamburger when panel is closed
         });
 
-        // Menu Items
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            // Check if click is outside the panel and not on the hamburger button
+            if (!sidePanel.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                if (sidePanel.classList.contains('active')) {
+                    sidePanel.classList.remove('active');
+                    mainContent.classList.remove('shifted');
+                }
+            }
+        });
+
+        // Menu Items with toggle functionality
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', () => {
-                // Update active state
-                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-
-                // Show corresponding content
                 const section = item.dataset.section;
-                document.querySelectorAll('.section-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(`${section}Content`).classList.add('active');
+                const contentElement = document.getElementById(`${section}Content`);
+                const isCurrentlyActive = item.classList.contains('active');
+                
+                // If clicking the same item that's active, toggle it
+                if (isCurrentlyActive) {
+                    item.classList.remove('active');
+                    contentElement.classList.remove('active');
+                } else {
+                    // Remove active state from all items and contents
+                    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                    document.querySelectorAll('.section-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Add active state to clicked item
+                    item.classList.add('active');
+                    contentElement.classList.add('active');
+                }
             });
         });
 
         // Theme Toggle
-        themeToggle.addEventListener('change', () => {
-            const newTheme = themeToggle.checked ? 'dark' : 'light';
-            document.body.setAttribute('data-theme', newTheme);
-            settings.theme = newTheme;
+        themeSelect.addEventListener('change', () => {
+            const newTheme = themeSelect.value;
+            console.log('Theme changed to:', newTheme);
+            
+            // Validate that love theme can only be selected by special users
+            if (newTheme === 'love' && (!currentUser || !isSpecialUser(currentUser.name))) {
+                console.log('Love theme not allowed for this user, reverting to light');
+                alert('This theme is not available for your user.');
+                themeSelect.value = 'light';
+                settings.theme = 'light';
+            } else {
+                settings.theme = newTheme;
+            }
+            
+            document.body.setAttribute('data-theme', settings.theme);
             localStorage.setItem('settings', JSON.stringify(settings));
+            updateSubtitle();
         });
 
         // User Management
         userSelect.addEventListener('change', () => {
             const userId = userSelect.value;
+            console.log('User selected:', userId);
+            
             if (userId) {
                 currentUser = users[userId];
+                console.log('Current user set to:', currentUser.name);
                 fillUserForm(currentUser);
                 fillGoalsForm(currentUser);
                 loadTodayData();
                 // Save last selected user
                 localStorage.setItem('lastUserId', userId);
             } else {
+                console.log('No user selected');
                 currentUser = null;
                 userForm.reset();
                 goalsForm.reset();
@@ -190,6 +328,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('lastUserId');
             }
             updateWelcomeMessage();
+            updateThemeOptions();
+            updateSubtitle();
+            
+            // Additional safety check: if love theme is active but user is not special, switch to light
+            if (settings.theme === 'love' && (!currentUser || !isSpecialUser(currentUser.name))) {
+                console.log('Safety check: Love theme active but user not special, switching to light');
+                settings.theme = 'light';
+                document.body.setAttribute('data-theme', 'light');
+                localStorage.setItem('settings', JSON.stringify(settings));
+                if (themeSelect) {
+                    themeSelect.value = 'light';
+                }
+            }
         });
 
         newUserBtn.addEventListener('click', () => {
@@ -198,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
             userForm.reset();
             goalsForm.reset();
             updateWelcomeMessage();
+            updateThemeOptions();
+            updateSubtitle();
         });
 
         deleteUserBtn.addEventListener('click', () => {
@@ -210,6 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     userForm.reset();
                     goalsForm.reset();
                     updateWelcomeMessage();
+                    updateThemeOptions();
+                    updateSubtitle();
                     renderCalendar();
                 }
             }
@@ -233,6 +388,8 @@ document.addEventListener('DOMContentLoaded', () => {
             userSelect.value = userData.id;
             currentUser = userData;
             updateWelcomeMessage();
+            updateThemeOptions();
+            updateSubtitle();
         });
 
         goalsForm.addEventListener('submit', (e) => {

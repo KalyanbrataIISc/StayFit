@@ -94,10 +94,11 @@
                         <form id="settingsForm" class="data-form">
                             <div class="theme-toggle">
                                 <span>Theme:</span>
-                                <label class="switch">
-                                    <input type="checkbox" id="themeToggle">
-                                    <span class="slider round"></span>
-                                </label>
+                                <select id="themeSelect">
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                    <option value="love" id="loveThemeOption" style="display: none;">Special Love 💕</option>
+                                </select>
                             </div>
                             <input type="text" id="apiKey" placeholder="Gemini API Key (optional)">
                             <button type="submit" class="action-btn">Save Settings</button>

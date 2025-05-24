@@ -37,6 +37,137 @@
     --shadow: 0 4px 24px 0 rgba(44, 62, 80, 0.18);
 }
 
+[data-theme="love"] {
+    --primary-color: #d63384;
+    --secondary-color: #e91e63;
+    --accent-color: #ff6b9d;
+    --danger-color: #e74c3c;
+    --warning-color: #ffc107;
+    --text-color: #2d1b2e;
+    --bg-color: linear-gradient(135deg, #ffeef8 0%, #f8e8ff 50%, #fff0f5 100%);
+    --panel-bg: #ffffff;
+    --panel-text: #2d1b2e;
+    --input-bg: #fef7f9;
+    --input-border: #f1c2d1;
+    --shadow: 0 4px 24px 0 rgba(214, 51, 132, 0.15);
+    --love-gradient: linear-gradient(45deg, #ff9a9e, #fecfef, #fecfef, #ff9a9e);
+    --love-accent: #ff69b4;
+    --love-soft: #ffc0cb;
+    --love-deep: #c2185b;
+}
+
+/* Special love theme styles */
+[data-theme="love"] body {
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+[data-theme="love"] .app-title {
+    background: var(--love-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+[data-theme="love"] .app-subtitle {
+    color: var(--love-deep);
+    font-weight: 600;
+}
+
+[data-theme="love"] .side-panel {
+    background: linear-gradient(180deg, #fff0f5 0%, #fef7f9 100%);
+    border-right: 2px solid var(--love-soft);
+}
+
+[data-theme="love"] .menu-item:hover, 
+[data-theme="love"] .menu-item.active {
+    background: var(--love-gradient);
+    color: white;
+    border-radius: 12px;
+}
+
+[data-theme="love"] .action-btn {
+    background: var(--love-gradient);
+    border: none;
+    color: white;
+}
+
+[data-theme="love"] .action-btn:hover {
+    background: linear-gradient(45deg, #ff69b4, #e91e63);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(214, 51, 132, 0.3);
+}
+
+[data-theme="love"] .analyze-btn {
+    background: var(--love-gradient);
+}
+
+[data-theme="love"] .analyze-btn:hover {
+    background: linear-gradient(45deg, #e91e63, #ff69b4);
+    box-shadow: 0 6px 20px rgba(214, 51, 132, 0.4);
+}
+
+[data-theme="love"] .progress-fill.calories {
+    background: var(--love-gradient);
+}
+
+[data-theme="love"] .progress-fill.protein {
+    background: linear-gradient(90deg, #ff9a9e, #ff69b4);
+}
+
+[data-theme="love"] .progress-fill.carbs {
+    background: linear-gradient(90deg, #fecfef, #e91e63);
+}
+
+[data-theme="love"] .progress-fill.fat {
+    background: linear-gradient(90deg, #ff6b9d, #c2185b);
+}
+
+[data-theme="love"] .food-header {
+    background: linear-gradient(90deg, #fef7f9 60%, #fff0f5 100%);
+}
+
+[data-theme="love"] .food-nutrition {
+    background: linear-gradient(180deg, #fef7f9 0%, #fff0f5 100%);
+}
+
+[data-theme="love"] .nutrition-value {
+    background: linear-gradient(45deg, #ffc0cb, #ffeef8);
+    border: 1px solid var(--love-soft);
+}
+
+[data-theme="love"] .add-food-btn {
+    background: var(--love-gradient);
+}
+
+[data-theme="love"] .add-food-btn:hover {
+    background: linear-gradient(45deg, #e91e63, #ff69b4);
+    box-shadow: 0 6px 20px rgba(214, 51, 132, 0.4);
+}
+
+[data-theme="love"] .hamburger-btn {
+    background: linear-gradient(45deg, #ffc0cb, #ffeef8);
+    border: 2px solid var(--love-soft);
+    color: var(--love-deep);
+}
+
+[data-theme="love"] .hamburger-btn:hover {
+    background: var(--love-gradient);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(214, 51, 132, 0.3);
+}
+
+/* Love theme heart decorations */
+[data-theme="love"] .welcome-message::before {
+    content: "💕 ";
+}
+
+[data-theme="love"] .welcome-message::after {
+    content: " 💕";
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -174,55 +305,28 @@ body {
     background-color: #c0392b;
 }
 
-/* Theme Toggle Switch */
+/* Theme Toggle */
 .theme-toggle {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
 }
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-}
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider {
-    position: absolute;
+
+.theme-toggle select {
+    padding: 8px 12px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
+    transition: border-color 0.2s;
 }
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-}
-input:checked + .slider {
-    background-color: var(--primary-color);
-}
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-.slider.round {
-    border-radius: 34px;
-}
-.slider.round:before {
-    border-radius: 50%;
+
+.theme-toggle select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
 }
 
 /* Main Content Styles */
@@ -241,26 +345,35 @@ input:checked + .slider:before {
 
 /* Hamburger Button */
 .hamburger-btn {
-    background: none;
-    border: none;
-    font-size: 28px;
+    background: var(--panel-bg);
+    border: 1px solid var(--input-border);
+    font-size: 24px;
     cursor: pointer;
     color: var(--text-color);
-    padding: 10px;
+    padding: 8px;
     position: fixed;
-    top: 24px;
-    left: 24px;
-    z-index: 1001;
+    top: 20px;
+    left: 20px;
+    z-index: 999;
     border-radius: 50%;
-    transition: background 0.2s, opacity 0.3s ease;
+    transition: all 0.3s ease;
     opacity: 1;
+    box-shadow: var(--shadow);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .hamburger-btn:hover {
-    background: #eaf6ff;
+    background: var(--secondary-color);
+    color: white;
+    transform: scale(1.05);
 }
 .hamburger-btn.hidden {
     opacity: 0;
     pointer-events: none;
+    transform: scale(0.8);
 }
 
 /* Welcome Message */
@@ -454,6 +567,19 @@ textarea:focus {
     .input-area, .nutrition-display {
         padding: 12px 2vw;
     }
+    .hamburger-btn {
+        font-size: 20px;
+        padding: 6px;
+        width: 36px;
+        height: 36px;
+        top: 16px;
+        left: 16px;
+    }
+    
+    .side-panel.active ~ .main-content .hamburger-btn {
+        opacity: 0;
+        pointer-events: none;
+    }
 }
 @media (max-width: 600px) {
     .main-content {
@@ -464,6 +590,122 @@ textarea:focus {
     }
     .app-title {
         font-size: 1.5em;
+    }
+    
+    /* Mobile-specific food card improvements */
+    .food-item {
+        margin-bottom: 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px 0 rgba(44, 62, 80, 0.08);
+        border: 1px solid var(--input-border) !important;
+        overflow: hidden;
+    }
+    
+    .food-item:hover {
+        box-shadow: 0 3px 16px 0 rgba(44, 62, 80, 0.12);
+        transform: translateY(-1px) scale(1.005);
+    }
+    
+    .food-header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 16px 8px 16px;
+        background: linear-gradient(90deg, #f8fbff 60%, #ffffff 100%);
+        border-bottom: 1px solid var(--input-border);
+    }
+    
+    .food-name-input {
+        flex: 1 1 100%;
+        margin-right: 0;
+        margin-bottom: 8px;
+        font-size: 1.05em;
+        border: 1px solid var(--input-border);
+    }
+    
+    .food-quantity-input, .food-unit-input {
+        flex: 1;
+        min-width: 80px;
+        border: 1px solid var(--input-border);
+    }
+    
+    .food-nutrition {
+        padding: 12px 16px 8px 16px;
+        position: relative;
+        background: #fbfcff;
+        border-bottom: none;
+    }
+    
+    .food-nutrition::after {
+        content: "← Swipe to see more →";
+        position: absolute;
+        bottom: 2px;
+        right: 16px;
+        font-size: 0.75em;
+        color: var(--secondary-color);
+        opacity: 0.7;
+        pointer-events: none;
+        font-style: italic;
+    }
+    
+    .nutrition-item {
+        gap: 12px;
+        padding: 4px 0;
+        font-size: 0.95em;
+    }
+    
+    .nutrition-label {
+        min-width: 80px;
+        font-size: 0.9em;
+    }
+    
+    .nutrition-value {
+        padding: 2px 8px;
+        font-size: 0.9em;
+        background: #f0f6ff;
+    }
+    
+    .nutrition-input {
+        width: 65px;
+        min-width: 65px;
+        font-size: 0.9em;
+        border: 1px solid var(--input-border);
+    }
+    
+    .food-actions {
+        margin: 12px 16px 0 16px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .food-action-btn {
+        flex: 1;
+        min-width: 80px;
+        padding: 8px 16px;
+        font-size: 0.9em;
+        box-shadow: 0 1px 4px rgba(44,62,80,0.06);
+    }
+    
+    .food-note {
+        margin: 8px 0 0 16px;
+        font-size: 0.9em;
+    }
+    
+    .food-breakdown {
+        padding-top: 16px;
+    }
+    
+    .add-food-btn {
+        padding: 12px;
+        font-size: 1.05em;
+        box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+        margin-top: 8px;
+    }
+    
+    #saveAllBtn {
+        margin-bottom: 16px;
+        padding: 12px;
+        font-size: 1.05em;
+        box-shadow: 0 2px 8px rgba(44,62,80,0.08);
     }
 }
 
@@ -543,11 +785,31 @@ textarea:focus {
     align-items: center;
     gap: 18px;
     font-size: 1.05em;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    min-width: 0;
+}
+.nutrition-item::-webkit-scrollbar {
+    height: 4px;
+}
+.nutrition-item::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+.nutrition-item::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 2px;
+}
+.nutrition-item::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
 }
 .nutrition-label {
     font-weight: 700;
     color: var(--primary-color);
     margin-right: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 .nutrition-value {
     display: flex;
@@ -557,9 +819,11 @@ textarea:focus {
     border-radius: 4px;
     padding: 2px 10px;
     font-size: 1em;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 .nutrition-input {
-    width: 54px;
+    width: 70px;
     padding: 2px 4px;
     border: 1px solid var(--input-border);
     border-radius: 4px;
@@ -568,6 +832,7 @@ textarea:focus {
     font-size: 1em;
     text-align: right;
     margin-left: 2px;
+    min-width: 70px;
 }
 .nutrition-input:focus {
     outline: none;
@@ -799,4 +1064,36 @@ textarea:focus {
 
 [data-theme="dark"] .hamburger-btn:hover {
     background: var(--input-bg) !important;
+}
+
+/* Dark theme mobile improvements */
+@media (max-width: 600px) {
+    [data-theme="dark"] .food-header {
+        background: linear-gradient(90deg, #2a2e35 60%, #23272f 100%) !important;
+    }
+    
+    [data-theme="dark"] .food-nutrition {
+        background: var(--panel-bg) !important;
+    }
+    
+    [data-theme="dark"] .nutrition-value {
+        background: #2a2e35 !important;
+    }
+    
+    [data-theme="dark"] .food-item {
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.15);
+    }
+    
+    [data-theme="dark"] .food-item:hover {
+        box-shadow: 0 3px 16px 0 rgba(0, 0, 0, 0.25);
+    }
+    
+    [data-theme="dark"] .add-food-btn,
+    [data-theme="dark"] #saveAllBtn {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    [data-theme="dark"] .food-action-btn {
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
 } 

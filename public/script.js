@@ -428,29 +428,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            let retryCount = 0;
-            const maxRetries = 3;
+            try {
+                analyzeBtn.disabled = true;
+                
+                // Create progress UI and insert it right after the analyze button
+                const progressContainer = createProgressUI();
+                analyzeBtn.parentNode.insertBefore(progressContainer, analyzeBtn.nextSibling);
 
-            async function tryAnalyze() {
-                try {
-                    analyzeBtn.disabled = true;
-                    analyzeBtn.textContent = retryCount > 0 ? `Analyzing... (Attempt ${retryCount + 1}/${maxRetries})` : 'Analyzing...';
-
-                    const response = await fetch('/api/analyze-food', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            text,
-                            userGoals: currentUser.goals
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
+                // Use Server-Sent Events for real-time progress
+                const eventData = encodeURIComponent(JSON.stringify({
+                    text,
+                    userGoals: currentUser.goals
+                }));
+                
+                const eventSource = new EventSource(`/api/analyze-food-progress?data=${eventData}`);
+                
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.stage === 'result') {
+                        // Analysis complete - process result
+                        const result = data.data;
+                        
                         // Merge new foods with existing foodArray
-                        let newFoods = Array.isArray(data.nutrition) ? data.nutrition : [];
+                        let newFoods = Array.isArray(result.nutrition) ? result.nutrition : [];
                         if (foodArray && foodArray.length > 0) {
                             // Avoid duplicate food names (optional: can be smarter)
                             const existingNames = new Set(foodArray.map(f => f.food_name + '_' + f.user_quantity + '_' + f.user_unit));
@@ -459,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             foodArray = newFoods;
                         }
+                        
                         // Recalculate progress
                         let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
                         foodArray.forEach(food => {
@@ -469,37 +471,68 @@ document.addEventListener('DOMContentLoaded', () => {
                                 totalFat += Number(food.total_nutrition_for_user.fat) || 0;
                             }
                         });
+                        
                         const newProgress = {
                             calories: (totalCalories / currentUser.goals.dailyCalories) * 100,
                             protein: (totalProtein / (currentUser.goals.dailyCalories * 0.25 / 4)) * 100,
                             carbs: (totalCarbs / (currentUser.goals.dailyCalories * 0.5 / 4)) * 100,
                             fat: (totalFat / (currentUser.goals.dailyCalories * 0.25 / 9)) * 100
                         };
+                        
                         updateNutritionDisplay({ nutrition: foodArray, progress: newProgress });
                         userInput.value = '';
+                        
+                        // Remove progress UI after completion
+                        setTimeout(() => {
+                            if (progressContainer && progressContainer.parentNode) {
+                                progressContainer.parentNode.removeChild(progressContainer);
+                            }
+                        }, 2000);
+                        
                         // Automatically save all after analysis
                         saveAllFoodItems();
-                        return true; // Success
+                        
+                        eventSource.close();
+                        analyzeBtn.disabled = false;
+                        analyzeBtn.textContent = 'Analyze';
+                        
+                    } else if (data.stage === 'error') {
+                        // Handle error
+                        updateProgressUI(progressContainer, 0, 'Error', data.message || 'An error occurred');
+                        eventSource.close();
+                        analyzeBtn.disabled = false;
+                        analyzeBtn.textContent = 'Analyze';
+                        
+                        setTimeout(() => {
+                            if (progressContainer && progressContainer.parentNode) {
+                                progressContainer.parentNode.removeChild(progressContainer);
+                            }
+                        }, 3000);
+                        
                     } else {
-                        throw new Error(data.error || 'Failed to analyze food intake');
+                        // Update progress
+                        updateProgressUI(progressContainer, data.percentage, data.stage, data.message);
+                        analyzeBtn.textContent = `${Math.round(data.percentage)}%`;
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                    if (retryCount < maxRetries - 1) {
-                        retryCount++;
-                        // Wait for 1 second before retrying
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        return tryAnalyze(); // Retry
-                    }
-                    throw error; // If all retries failed, throw the error
-                }
-            }
+                };
+                
+                eventSource.onerror = function(event) {
+                    console.error('EventSource failed:', event);
+                    updateProgressUI(progressContainer, 0, 'Error', 'Connection error occurred');
+                    eventSource.close();
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.textContent = 'Analyze';
+                    
+                    setTimeout(() => {
+                        if (progressContainer && progressContainer.parentNode) {
+                            progressContainer.parentNode.removeChild(progressContainer);
+                        }
+                    }, 3000);
+                };
 
-            try {
-                await tryAnalyze();
             } catch (error) {
+                console.error('Error:', error);
                 alert('Error analyzing food intake. Please try again later.');
-            } finally {
                 analyzeBtn.disabled = false;
                 analyzeBtn.textContent = 'Analyze';
             }
@@ -947,8 +980,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupQuantityChangeListener();
 
     // Expose these functions globally for onclick handlers
-    window.saveFoodItem = saveFoodItem;
     window.deleteFoodItem = deleteFoodItem;
+    window.saveFoodItem = saveFoodItem;
 
     // Calendar Functions
     function initializeCalendar() {
@@ -1122,4 +1155,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     userForm.querySelector('.form-buttons').appendChild(clearUserDataBtn);
+
+    // Progress UI Helper Functions
+    function createProgressUI() {
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'analysis-progress';
+        progressContainer.innerHTML = `
+            <div class="progress-header">
+                <h4>Analyzing Food Intake...</h4>
+                <div class="progress-percentage">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-message">Starting analysis...</div>
+            <div class="progress-stages">
+                <div class="stage" data-stage="parsing">
+                    <div class="stage-icon">📝</div>
+                    <div class="stage-label">Parsing</div>
+                </div>
+                <div class="stage" data-stage="matching">
+                    <div class="stage-icon">🔍</div>
+                    <div class="stage-label">Matching</div>
+                </div>
+                <div class="stage" data-stage="searching">
+                    <div class="stage-icon">🌐</div>
+                    <div class="stage-label">Searching</div>
+                </div>
+                <div class="stage" data-stage="calculating">
+                    <div class="stage-icon">🧠</div>
+                    <div class="stage-label">Calculating</div>
+                </div>
+                <div class="stage" data-stage="retrying">
+                    <div class="stage-icon">🔄</div>
+                    <div class="stage-label">Retrying</div>
+                </div>
+                <div class="stage" data-stage="complete">
+                    <div class="stage-icon">✅</div>
+                    <div class="stage-label">Complete</div>
+                </div>
+            </div>
+        `;
+        return progressContainer;
+    }
+
+    function updateProgressUI(container, percentage, stage, message) {
+        if (!container) return;
+        
+        const percentageEl = container.querySelector('.progress-percentage');
+        const progressFill = container.querySelector('.progress-bar-fill');
+        const messageEl = container.querySelector('.progress-message');
+        const stages = container.querySelectorAll('.stage');
+        
+        // Update percentage and progress bar
+        if (percentageEl) percentageEl.textContent = `${Math.round(percentage)}%`;
+        if (progressFill) progressFill.style.width = `${percentage}%`;
+        if (messageEl) messageEl.textContent = message;
+        
+        // Update stage indicators
+        stages.forEach(stageEl => {
+            const stageType = stageEl.dataset.stage;
+            stageEl.classList.remove('active', 'completed');
+            
+            if (stageType === stage) {
+                stageEl.classList.add('active');
+            } else if (shouldStageBeCompleted(stageType, stage, percentage)) {
+                stageEl.classList.add('completed');
+            }
+        });
+    }
+
+    function shouldStageBeCompleted(stageType, currentStage, percentage) {
+        const stageOrder = ['parsing', 'matching', 'searching', 'calculating', 'retrying', 'complete'];
+        const stageIndex = stageOrder.indexOf(stageType);
+        const currentIndex = stageOrder.indexOf(currentStage);
+        
+        if (currentIndex === -1) return false;
+        
+        // Special handling for retry stage - it can be active during any other stage
+        if (currentStage === 'retrying') {
+            return stageType !== 'retrying' && stageType !== 'complete';
+        }
+        
+        return stageIndex < currentIndex || (stageIndex === currentIndex && percentage > 90);
+    }
 }); 

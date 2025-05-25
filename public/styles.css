@@ -1096,4 +1096,288 @@ textarea:focus {
     [data-theme="dark"] .food-action-btn {
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     }
+}
+
+/* Analysis Progress Styles */
+.analysis-progress {
+    margin-top: 16px;
+    margin-bottom: 20px;
+    padding: 24px;
+    background: var(--panel-bg);
+    border-radius: 16px;
+    border: 1.5px solid var(--input-border);
+    box-shadow: var(--shadow);
+    color: var(--text-color);
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.progress-header h4 {
+    color: var(--primary-color);
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0;
+}
+
+.progress-percentage {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--secondary-color);
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 12px;
+    background: var(--input-border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-message {
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.05em;
+    margin-bottom: 20px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.progress-stages {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stage-icon {
+    font-size: 1.8em;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+.stage-label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--text-color);
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.stage.active {
+    background: linear-gradient(135deg, var(--secondary-color)15, var(--accent-color)15);
+    transform: scale(1.05);
+}
+
+.stage.active .stage-icon {
+    filter: grayscale(0%);
+    opacity: 1;
+    animation: pulse 1.5s infinite;
+    transform: scale(1.1);
+}
+
+.stage.active .stage-label {
+    opacity: 1;
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.stage.completed {
+    background: linear-gradient(135deg, var(--accent-color)20, var(--secondary-color)20);
+}
+
+.stage.completed .stage-icon {
+    filter: grayscale(0%);
+    opacity: 0.8;
+    transform: scale(0.9);
+}
+
+.stage.completed .stage-label {
+    opacity: 0.8;
+    color: var(--accent-color);
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1.1); }
+    50% { transform: scale(1.2); }
+}
+
+@keyframes spin {
+    0% { transform: scale(1.1) rotate(0deg); }
+    100% { transform: scale(1.1) rotate(360deg); }
+}
+
+/* Special retry stage animation */
+.stage[data-stage="retrying"].active .stage-icon {
+    animation: spin 1s linear infinite;
+}
+
+/* Progress connection lines */
+.stage:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -8px;
+    width: 16px;
+    height: 2px;
+    background: var(--input-border);
+    transform: translateY(-50%);
+    z-index: -1;
+    transition: background 0.3s ease;
+}
+
+.stage.completed:not(:last-child)::after {
+    background: var(--accent-color);
+    opacity: 0.6;
+}
+
+/* Love theme progress styles */
+[data-theme="love"] .analysis-progress {
+    background: linear-gradient(180deg, #fef7f9 0%, #fff0f5 100%);
+    border: 2px solid var(--love-soft);
+}
+
+[data-theme="love"] .progress-header h4 {
+    background: var(--love-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="love"] .progress-percentage {
+    background: var(--love-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="love"] .progress-bar-fill {
+    background: var(--love-gradient);
+}
+
+[data-theme="love"] .stage.active {
+    background: linear-gradient(135deg, rgba(255, 192, 203, 0.2), rgba(255, 182, 193, 0.2));
+}
+
+[data-theme="love"] .stage.completed {
+    background: linear-gradient(135deg, rgba(255, 105, 180, 0.15), rgba(199, 21, 133, 0.15));
+}
+
+[data-theme="love"] .stage.active .stage-label {
+    color: var(--love-deep);
+}
+
+[data-theme="love"] .stage.completed .stage-label {
+    color: var(--love-accent);
+}
+
+/* Dark theme progress styles */
+[data-theme="dark"] .analysis-progress {
+    background: var(--panel-bg);
+    border-color: var(--input-border);
+}
+
+[data-theme="dark"] .progress-bar-container {
+    background: #2a2e35;
+}
+
+[data-theme="dark"] .stage:not(:last-child)::after {
+    background: #404040;
+}
+
+/* Mobile responsive progress */
+@media (max-width: 600px) {
+    .progress-stages {
+        gap: 4px;
+    }
+    
+    .stage {
+        padding: 8px 4px;
+    }
+    
+    .stage-icon {
+        font-size: 1.4em;
+    }
+    
+    .stage-label {
+        font-size: 0.75em;
+    }
+    
+    .stage:not(:last-child)::after {
+        width: 8px;
+        right: -4px;
+    }
+    
+    .analysis-progress {
+        padding: 16px;
+    }
+    
+    .progress-header h4 {
+        font-size: 1.1em;
+    }
+    
+    .progress-percentage {
+        font-size: 1.1em;
+    }
 } 
